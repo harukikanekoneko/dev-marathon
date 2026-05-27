@@ -1,50 +1,71 @@
 const express = require("express");
-const app = express();
-app.use(express.urlencoded({ extended: true }));
+const cors = require("cors");
+const { Pool } = require("pg");
 
+const app = express();
 const port = 5641;
 
-const cors = require("cors");
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const { Pool } = require("pg");
+// DB接続
 const pool = new Pool({
-  user: "user_5641", // PostgreSQLのユーザー名に置き換えてください
-  host: "db",
-  database: "crm_5641", // PostgreSQLのデータベース名に置き換えてください
-  password: "pass_5641", // PostgreSQLのパスワードに置き換えてください
+  user: "user_5641",
+  host: "postgres",
+  database: "crm_5641",
+  password: "pass_5641",
   port: 5432,
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
+// 起動
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
 
+// 一覧取得
 app.get("/customers", async (req, res) => {
   try {
-    const customerData = await pool.query("SELECT * FROM customers");
-    res.send(customerData.rows);
+    const result = await pool.query(
+      "SELECT * FROM customers ORDER BY id ASC"
+    );
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.send("Error " + err);
+    res.status(500).send("Error");
   }
 });
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// 詳細取得（今回の核心）
+app.get("/customers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const result = await pool.query(
+      "SELECT * FROM customers WHERE id = $1",
+      [id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error");
+  }
+});
+
+// 登録
 app.post("/add-customer", async (req, res) => {
   try {
     const { companyName, industry, contact, location } = req.body;
-    const newCustomer = await pool.query(
+
+    const result = await pool.query(
       "INSERT INTO customers (company_name, industry, contact, location) VALUES ($1, $2, $3, $4) RETURNING *",
       [companyName, industry, contact, location]
     );
-    res.json({ success: true, customer: newCustomer.rows[0] });
+
+    res.json({ success: true, customer: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.json({ success: false });
   }
 });
-
-app.use(express.static("public"));
