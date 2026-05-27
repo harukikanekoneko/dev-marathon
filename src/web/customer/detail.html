@@ -7,48 +7,97 @@
 
 <body>
 
-<h2>顧客詳細</h2>
+<h2>顧客詳細（編集可能）</h2>
 
 <table border="1">
-  <tr><th>ID</th><td id="id"></td></tr>
-  <tr><th>会社名</th><td id="company_name"></td></tr>
-  <tr><th>業種</th><td id="industry"></td></tr>
-  <tr><th>連絡先</th><td id="contact"></td></tr>
-  <tr><th>所在地</th><td id="location"></td></tr>
+  <tr>
+    <th>ID</th>
+    <td id="id"></td>
+  </tr>
+
+  <tr>
+    <th>会社名</th>
+    <td><input id="company_name"></td>
+  </tr>
+
+  <tr>
+    <th>業種</th>
+    <td><input id="industry"></td>
+  </tr>
+
+  <tr>
+    <th>連絡先</th>
+    <td><input id="contact"></td>
+  </tr>
+
+  <tr>
+    <th>所在地</th>
+    <td><input id="location"></td>
+  </tr>
 </table>
 
+<button id="updateBtn">更新</button>
 <button id="deleteBtn">削除</button>
 <a href="./list.html">戻る</a>
 
 <script type="module">
 import config from "../config.js";
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+const id = new URLSearchParams(window.location.search).get("id");
 
-// DOM取得後に実行（安全化）
 window.addEventListener("DOMContentLoaded", async () => {
 
-  // 詳細取得
+  // 取得
   const res = await fetch(`${config.apiUrl}/customers/${id}`);
   const c = await res.json();
 
   document.getElementById("id").textContent = c.customer_id;
-  document.getElementById("company_name").textContent = c.company_name;
-  document.getElementById("industry").textContent = c.industry;
-  document.getElementById("contact").textContent = c.contact;
-  document.getElementById("location").textContent = c.location;
+  document.getElementById("company_name").value = c.company_name;
+  document.getElementById("industry").value = c.industry;
+  document.getElementById("contact").value = c.contact;
+  document.getElementById("location").value = c.location;
 
-  // 削除ボタン
+  // ======================
+  // 更新
+  // ======================
+  document.getElementById("updateBtn").addEventListener("click", async () => {
+
+    const body = {
+      company_name: document.getElementById("company_name").value,
+      industry: document.getElementById("industry").value,
+      contact: document.getElementById("contact").value,
+      location: document.getElementById("location").value
+    };
+
+    const res = await fetch(`${config.apiUrl}/customers/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      alert("更新しました");
+    } else {
+      alert("更新失敗");
+    }
+  });
+
+  // ======================
+  // 削除
+  // ======================
   document.getElementById("deleteBtn").addEventListener("click", async () => {
 
     alert("削除していいですか？");
 
-    const del = await fetch(`${config.apiUrl}/customers/${id}`, {
+    const res = await fetch(`${config.apiUrl}/customers/${id}`, {
       method: "DELETE"
     });
 
-    const result = await del.json();
+    const result = await res.json();
 
     if (result.success) {
       alert("削除しました");
