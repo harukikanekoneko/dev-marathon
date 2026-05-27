@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>顧客詳細</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 
-<body class="container mt-5">
+<body>
 
 <h2>顧客詳細</h2>
 
-<table class="table table-bordered">
+<table border="1">
   <tr><th>ID</th><td id="id"></td></tr>
   <tr><th>会社名</th><td id="company_name"></td></tr>
   <tr><th>業種</th><td id="industry"></td></tr>
@@ -18,7 +17,8 @@
   <tr><th>所在地</th><td id="location"></td></tr>
 </table>
 
-<a href="./list.html" class="btn btn-secondary">戻る</a>
+<button id="deleteBtn">削除</button>
+<a href="./list.html">戻る</a>
 
 <script type="module">
 import config from "../config.js";
@@ -26,15 +26,39 @@ import config from "../config.js";
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-fetch(`${config.apiUrl}/customers/${id}`)
-  .then(res => res.json())
-  .then(c => {
-    document.getElementById("id").textContent = c.id;
-    document.getElementById("company_name").textContent = c.company_name;
-    document.getElementById("industry").textContent = c.industry;
-    document.getElementById("contact").textContent = c.contact;
-    document.getElementById("location").textContent = c.location;
+// DOM取得後に実行（安全化）
+window.addEventListener("DOMContentLoaded", async () => {
+
+  // 詳細取得
+  const res = await fetch(`${config.apiUrl}/customers/${id}`);
+  const c = await res.json();
+
+  document.getElementById("id").textContent = c.customer_id;
+  document.getElementById("company_name").textContent = c.company_name;
+  document.getElementById("industry").textContent = c.industry;
+  document.getElementById("contact").textContent = c.contact;
+  document.getElementById("location").textContent = c.location;
+
+  // 削除ボタン
+  document.getElementById("deleteBtn").addEventListener("click", async () => {
+
+    alert("削除していいですか？");
+
+    const del = await fetch(`${config.apiUrl}/customers/${id}`, {
+      method: "DELETE"
+    });
+
+    const result = await del.json();
+
+    if (result.success) {
+      alert("削除しました");
+      window.location.href = "./list.html";
+    } else {
+      alert("削除失敗");
+    }
   });
+
+});
 </script>
 
 </body>

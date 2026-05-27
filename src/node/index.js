@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// DB接続
 const pool = new Pool({
   user: "user_5641",
   host: "postgres",
@@ -18,38 +17,33 @@ const pool = new Pool({
   port: 5432,
 });
 
-// 起動
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
-// 一覧取得
+// 一覧
 app.get("/customers", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM customers ORDER BY id ASC"
+      "SELECT * FROM customers ORDER BY customer_id ASC"
     );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error");
+    res.status(500).json({ error: err.message });
   }
 });
 
-// 詳細取得（今回の核心）
+// 詳細
 app.get("/customers/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      "SELECT * FROM customers WHERE id = $1",
+      "SELECT * FROM customers WHERE customer_id = $1",
       [id]
     );
 
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error");
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -59,13 +53,37 @@ app.post("/add-customer", async (req, res) => {
     const { companyName, industry, contact, location } = req.body;
 
     const result = await pool.query(
-      "INSERT INTO customers (company_name, industry, contact, location) VALUES ($1, $2, $3, $4) RETURNING *",
+      `INSERT INTO customers 
+      (company_name, industry, contact, location)
+      VALUES ($1,$2,$3,$4)
+      RETURNING *`,
       [companyName, industry, contact, location]
     );
 
     res.json({ success: true, customer: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.json({ success: false });
+    res.status(500).json({ error: err.message });
   }
+});
+
+// 削除
+app.delete("/customers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query(
+      "DELETE FROM customers WHERE customer_id = $1",
+      [id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running at http://localhost:${port}`);
 });

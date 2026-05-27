@@ -2,15 +2,14 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>顧客一覧</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <title>一覧</title>
 </head>
 
-<body class="container mt-5">
+<body>
 
 <h2>顧客一覧</h2>
 
-<table class="table table-striped">
+<table border="1">
   <thead>
     <tr>
       <th>ID</th>
@@ -25,25 +24,31 @@
 <script type="module">
 import config from "../config.js";
 
-fetch(`${config.apiUrl}/customers`)
-  .then(res => res.json())
-  .then(data => {
+window.addEventListener("DOMContentLoaded", () => {
 
-    const list = document.getElementById("customer-list");
+  const tbody = document.getElementById("customer-list");
 
-    data.forEach((c) => {
-      const row = list.insertRow();
+  fetch(config.apiUrl + "/customers")
+    .then(res => res.json())
+    .then(data => {
 
-      row.insertCell(0).textContent = c.id;
+      data.forEach(c => {
 
-      row.insertCell(1).innerHTML =
-        `<a href="./detail.html?id=${c.id}">
-          ${c.company_name}
-        </a>`;
+        const row = tbody.insertRow();
 
-      row.insertCell(2).textContent = c.contact;
-    });
-  });
+        row.insertCell(0).textContent = c.customer_id;
+
+        row.insertCell(1).innerHTML =
+          `<a href="./detail.html?id=${c.customer_id}">
+            ${c.company_name}
+          </a>`;
+
+        row.insertCell(2).textContent = c.contact;
+      });
+
+    })
+    .catch(err => console.error(err));
+});
 </script>
 
 </body>
