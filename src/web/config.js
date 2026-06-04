@@ -1,5 +1,5 @@
 const config = {
-  apiUrl: 'http://localhost:3000'
+  apiUrl: 'http://marathon.rplearn.net/api_ha-kaneko'
 };
 
 export default config;
